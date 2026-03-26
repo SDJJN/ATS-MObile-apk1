@@ -35,7 +35,7 @@ icon.filename = static/ats_app_icon.png
 orientation = portrait
 
 # (list) Permissions
-android.permissions = INTERNET, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE
+android.permissions = INTERNET, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, MANAGE_EXTERNAL_STORAGE
 
 # (int) Android API to use
 android.api = 33
