@@ -9,6 +9,9 @@ package.name = ats_analyzer
 # (str) Package domain (needed for android duplication)
 package.domain = org.ats.analyzer
 
+# (str) Application version
+version = 0.1
+
 # (str) Source code where the main.py live
 source.dir = .
 
