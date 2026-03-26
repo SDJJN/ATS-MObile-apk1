@@ -36,13 +36,15 @@ jobs:
             zip \
             pkg-config
 
-      - name: Install Buildozer
-        run: pip install --user buildozer
+      - name: Install Buildozer and Cython
+        run: |
+          pip install --user buildozer
+          pip install --user cython==0.29.33
 
       - name: Build with Buildozer
         run: |
           export PATH=$PATH:$HOME/.local/bin
-          buildozer android debug
+          yes | buildozer android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
