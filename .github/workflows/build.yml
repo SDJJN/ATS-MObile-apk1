@@ -32,6 +32,7 @@ jobs:
             automake \
             libtool \
             openjdk-17-jdk \
+            gettext \
             unzip \
             zip \
             pkg-config
