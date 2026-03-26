@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATS Resume Analyzer — Score Your Resume</title>
+    <meta name="description" content="AI-powered ATS Resume Analyzer. Upload your resume, paste a job description, and get an instant ATS compatibility score with TF-IDF analysis.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Ambient background -->
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">📑</span>
+                <h1>ATS Resume Analyzer</h1>
+            </div>
+            <p class="subtitle">AI-powered resume analysis with TF-IDF scoring &amp; keyword matching</p>
+        </header>
+
+        <!-- Main Form Card -->
+        <div class="card form-card">
+            <form id="analyzeForm" enctype="multipart/form-data">
+                <!-- Upload Section -->
+                <div class="form-section">
+                    <label class="form-label">
+                        <span class="label-icon">📄</span>
+                        Upload Resume
+                    </label>
+                    <div class="dropzone" id="dropzone">
+                        <div class="dropzone-content">
+                            <div class="dropzone-icon">
+                                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                            </div>
+                            <p class="dropzone-text">Drag &amp; drop your resume here</p>
+                            <p class="dropzone-subtext">or click to browse</p>
+                            <p class="dropzone-formats">Supports PDF, DOCX, TXT</p>
+                        </div>
+                        <div class="dropzone-file-info" id="fileInfo" style="display:none;">
+                            <div class="file-badge">
+                                <span class="file-icon">📎</span>
+                                <span class="file-name" id="fileName"></span>
+                                <span class="file-size" id="fileSize"></span>
+                                <button type="button" class="file-remove" id="fileRemove" title="Remove">✕</button>
+                            </div>
+                        </div>
+                        <input type="file" id="resumeInput" name="resume" accept=".pdf,.docx,.txt" hidden>
+                    </div>
+                </div>
+
+                <!-- Job Description -->
+                <div class="form-section">
+                    <label class="form-label" for="jobDescription">
+                        <span class="label-icon">💼</span>
+                        Job Description
+                    </label>
+                    <div class="textarea-wrapper">
+                        <textarea id="jobDescription" name="job_description" rows="7"
+                            placeholder="Paste the full job description here..."></textarea>
+                        <span class="char-count" id="charCount">0 characters</span>
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn-analyze" id="btnAnalyze">
+                    <span class="btn-text">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        Analyze Resume
+                    </span>
+                    <span class="btn-loader" style="display:none;">
+                        <span class="spinner"></span>
+                        Analyzing...
+                    </span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Error -->
+        <div class="error-banner" id="errorBanner" style="display:none;">
+            <span class="error-icon">⚠️</span>
+            <span class="error-text" id="errorText"></span>
+        </div>
+
+        <!-- ═══════════ RESULTS ═══════════ -->
+        <div class="results-section" id="resultsSection" style="display:none;">
+
+            <!-- Score Card -->
+            <div class="card score-card">
+                <h2 class="section-title">ATS Compatibility Score</h2>
+                <div class="score-display">
+                    <div class="score-ring" id="scoreRing">
+                        <svg viewBox="0 0 200 200" class="score-svg">
+                            <circle cx="100" cy="100" r="85" class="score-track"/>
+                            <circle cx="100" cy="100" r="85" class="score-fill" id="scoreFill"/>
+                        </svg>
+                        <div class="score-value">
+                            <span class="score-number" id="scoreNumber">0</span>
+                            <span class="score-out-of">/ 100</span>
+                        </div>
+                    </div>
+                    <div class="score-meta">
+                        <span class="score-label" id="scoreLabel">—</span>
+                        <p class="score-message" id="scoreMessage"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Indicators -->
+            <div class="card indicators-card">
+                <h2 class="section-title">
+                    <span class="title-icon">📊</span>
+                    Analysis Breakdown
+                </h2>
+                
+                <!-- Professional Badges -->
+                <div class="badges-row" id="badgesRow">
+                    <div class="prof-badge" id="badgeDegree" style="display:none;">
+                        <span class="badge-icon">🎓</span> 
+                        <span class="badge-text">Education Match</span>
+                    </div>
+                    <div class="prof-badge" id="badgeExp" style="display:none;">
+                        <span class="badge-icon">💼</span> 
+                        <span class="badge-text">Experience Match</span>
+                    </div>
+                </div>
+
+                <div class="indicators-grid">
+                    <!-- Skills Fit -->
+                    <div class="indicator indicator-highlight">
+                        <div class="indicator-header">
+                            <span class="indicator-label">Skills Fit</span>
+                            <span class="indicator-value" id="skillsFitValue">0%</span>
+                        </div>
+                        <div class="indicator-bar">
+                            <div class="indicator-fill skills-fill" id="skillsFitBar"></div>
+                        </div>
+                        <p class="indicator-desc">Direct matching of technical skills from Job Description</p>
+                    </div>
+                    <!-- TF-IDF Similarity -->
+                    <div class="indicator">
+                        <div class="indicator-header">
+                            <span class="indicator-label">TF-IDF Similarity</span>
+                            <span class="indicator-value" id="tfidfValue">0%</span>
+                        </div>
+                        <div class="indicator-bar">
+                            <div class="indicator-fill tfidf-fill" id="tfidfBar"></div>
+                        </div>
+                        <p class="indicator-desc">Semantic similarity between resume &amp; job description</p>
+                    </div>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <span class="stat-number" id="statMatchedSkills">0</span>
+                        <span class="stat-label">Matched Skills</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number" id="statMissingSkills">0</span>
+                        <span class="stat-label">Missing Skills</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number" id="statMatchedKw">0</span>
+                        <span class="stat-label">General Keywords</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skills Analysis -->
+            <div class="card keywords-card skills-card">
+                <h2 class="section-title">
+                    <span class="title-icon">🛠️</span>
+                    Technical Skills Match
+                </h2>
+                <div class="keywords-grid">
+                    <div class="keywords-col">
+                        <h3 class="keywords-heading matched-heading">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                            Matched Skills
+                        </h3>
+                        <div class="keywords-pills" id="matchedSkillsPills"></div>
+                    </div>
+                    <div class="keywords-col">
+                        <h3 class="keywords-heading missing-heading">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                            Missing Skills
+                        </h3>
+                        <div class="keywords-pills" id="missingSkillsPills"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- General Keyword Analysis -->
+            <div class="card keywords-card">
+                <h2 class="section-title">
+                    <span class="title-icon">🔑</span>
+                    General Keyword Analysis
+                </h2>
+                <div class="keywords-grid">
+                    <div class="keywords-col">
+                        <h3 class="keywords-heading matched-heading">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                            Matched Keywords
+                        </h3>
+                        <div class="keywords-pills" id="matchedPills"></div>
+                    </div>
+                    <div class="keywords-col">
+                        <h3 class="keywords-heading missing-heading">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                            Missing Keywords
+                        </h3>
+                        <div class="keywords-pills" id="missingPills"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suggestions -->
+            <div class="card suggestions-card" id="suggestionsCard" style="display:none;">
+                <h2 class="section-title">
+                    <span class="title-icon">💡</span>
+                    Improvement Suggestions
+                </h2>
+                <div class="suggestions-list" id="suggestionsList"></div>
+            </div>
+
+            <!-- Entities Comparison -->
+            <div class="card entities-card" id="entitiesCard" style="display:none;">
+                <div class="section-title-row">
+                    <h2 class="section-title">
+                        <span class="title-icon">🔍</span>
+                        NER Extracted Entities
+                    </h2>
+                    <button type="button" class="toggle-btn" id="toggleEntities">Show Details</button>
+                </div>
+                <div class="entities-content" id="entitiesContent" style="display:none;">
+                    <div class="entities-grid">
+                        <div class="entities-col">
+                            <h3 class="entities-heading resume-heading">Resume Entities</h3>
+                            <div class="entities-table-wrap">
+                                <table class="entities-table" id="resumeTable">
+                                    <thead><tr><th>Label</th><th>Entity</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="entities-col">
+                            <h3 class="entities-heading job-heading">Job Description Entities</h3>
+                            <div class="entities-table-wrap">
+                                <table class="entities-table" id="jobTable">
+                                    <thead><tr><th>Label</th><th>Entity</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Powered by TF-IDF &amp; spaCy NER • Built with Flask</p>
+        </footer>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
