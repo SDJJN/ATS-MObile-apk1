@@ -8,23 +8,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Cache Buildozer
-        uses: actions/cache@v3
-        with:
-          path: .buildozer
-          key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
+      - uses: actions/checkout@v4
 
       - name: Build with Buildozer
-        uses: ArtemSerebrennikov/buildozer-action@v1
+        uses: kivy/buildozer-action@master
         id: buildozer
         with:
           workdir: .
-          buildozer_version: master
+          buildozer_version: stable
 
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ats-analyzer-apk
           path: bin/*.apk
